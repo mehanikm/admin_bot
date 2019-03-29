@@ -1,8 +1,10 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from smiles import smiles
 import json
+import config
 
 
+# Create keyboard
 def make_kb(text_1, text_2, text_3):
     button_1 = InlineKeyboardButton(text_1, callback_data=smiles["xd"])
     button_2 = InlineKeyboardButton(
@@ -14,6 +16,7 @@ def make_kb(text_1, text_2, text_3):
     return keyboard
 
 
+# Count all reactions for certain message
 def count_reacts(message_id, reaction):
     message_id = str(message_id)
     c = 0
@@ -24,16 +27,22 @@ def count_reacts(message_id, reaction):
 
 
 # Collect reactions
-with open("reacts.json") as f:
-    messages = dict(json.load(f))
+def read_chat_reacts(chat):
+    global messages
+    try:
+        with open(f"reacts_{config.chats[chat]}.json") as f:
+            messages = dict(json.load(f))
+    except FileNotFoundError:
+        messages = dict()
 
 
-def add_to_set(user, curr_mess, reaction):
+# Add reactions to set
+def add_to_set(chat, user, curr_mess, reaction):
     curr_mess = str(curr_mess)
     user = str(user)
     if curr_mess in messages:
         messages[curr_mess][user] = reaction
     else:
         messages[curr_mess] = {user: reaction}
-    with open("reacts.json", "w") as f:
+    with open(f"reacts_{config.chats[chat]}.json", "w") as f:
         json.dump(messages, f)

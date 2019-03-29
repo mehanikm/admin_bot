@@ -9,7 +9,8 @@ from smiles import smiles
 bot = telebot.TeleBot(config.token)
 
 # Add reaction inline markup keyboard
-keyboard = funcs.make_kb(smiles["xd"], smiles["drunk"], smiles["gays"])
+keyboard = funcs.make_kb(
+    smiles["xd"]+"0", smiles["drunk"]+"0", smiles["gays"]+"0")
 
 # Post simple text messages to channel with keyboard
 @bot.message_handler(content_types=["text"])
@@ -28,20 +29,26 @@ def answer_query(call):
     bot.answer_callback_query(call.id, text=call.data)
 
     # Write users reaction to reactions set
-    funcs.add_to_set(call.from_user.id, call.message.message_id, call.data)
+    funcs.read_chat_reacts(call.message.chat.id)
+    funcs.add_to_set(call.message.chat.id, call.from_user.id,
+                     call.message.message_id, call.data)
 
     # Recount every button's counter and create new kb
     first_line = keyboard.keyboard[0]
-    new_but_1 = first_line[0]["text"] + str(funcs.count_reacts(call.message.message_id,
-                                                               first_line[0]["callback_data"]))
-    new_but_2 = first_line[1]["text"] + str(funcs.count_reacts(call.message.message_id,
-                                                               first_line[1]["callback_data"]))
-    new_but_3 = first_line[2]["text"] + str(funcs.count_reacts(call.message.message_id,
-                                                               first_line[2]["callback_data"]))
+    new_but_1 = first_line[0]["text"][:-1] + str(funcs.count_reacts(call.message.message_id,
+                                                                    first_line[0]["callback_data"]))
+    new_but_2 = first_line[1]["text"][:-1] + str(funcs.count_reacts(call.message.message_id,
+                                                                    first_line[1]["callback_data"]))
+    new_but_3 = first_line[2]["text"][:-1] + str(funcs.count_reacts(call.message.message_id,
+                                                                    first_line[2]["callback_data"]))
     new_kb = funcs.make_kb(new_but_1, new_but_2, new_but_3)
     # Replace kb with new one
-    bot.edit_message_reply_markup(
-        call.message.chat.id, call.message.message_id, reply_markup=new_kb)
+    try:
+        bot.edit_message_reply_markup(
+            call.message.chat.id, call.message.message_id, reply_markup=new_kb)
+    except:
+        print(
+            f"Failed to update keyboard(message {call.message.message_id})")
 
 
 # If name == main ...
